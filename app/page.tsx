@@ -1,16 +1,13 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog" // Import Dialog
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import Link from "next/link"
 import {
@@ -57,32 +54,17 @@ import {
 } from "lucide-react"
 import ScrollVelocity from "@/components/scroll-velocity"
 import "@/components/scroll-velocity.css"
-
-// Floating particles component
-function FloatingParticles() {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-2 h-2 bg-purple-500/20 rounded-full animate-float"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${3 + Math.random() * 4}s`,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
+import { Canvas } from "@react-three/fiber"
+import { Html, OrbitControls, Environment } from "@react-three/drei"
+import MacBookAnimation from "@/components/macbook-animation" // Import the new component
+import InteractiveSkillBar from "@/components/interactive-skill-bar" // Import InteractiveSkillBar
+import ContactForm from "@/components/contact-form" // Import ContactForm
+import FloatingParticles from "@/components/floating-particles" // Import FloatingParticles
 
 // Enhanced loading page
 function LoadingPage({ onComplete }: { onComplete: () => void }) {
   const [fadeOut, setFadeOut] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     // Progress animation
@@ -96,16 +78,15 @@ function LoadingPage({ onComplete }: { onComplete: () => void }) {
       })
     }, 80)
 
-    const timer = setTimeout(() => {
-      setFadeOut(true)
-      setTimeout(onComplete, 1000)
-    }, 6000) // Increased to 6 seconds
-
     return () => {
-      clearTimeout(timer)
       clearInterval(progressInterval)
     }
-  }, [onComplete])
+  }, [])
+
+  const handle3DAnimationComplete = () => {
+    setFadeOut(true)
+    setTimeout(onComplete, 1000) // Fade out after 3D animation
+  }
 
   return (
     <div
@@ -128,136 +109,106 @@ function LoadingPage({ onComplete }: { onComplete: () => void }) {
         ))}
       </div>
 
-      {/* Content Container */}
-      <div className="relative z-10 flex items-center justify-center h-full p-8">
-        <div className="text-center max-w-4xl">
-          {/* Profile Image - wider in landscape ratio and 30% bigger */}
-          <div
-            className={`mx-auto mb-8 transition-all duration-2000 photo-pulse-animation ${
-              fadeOut ? "transform scale-75 opacity-0" : "transform scale-100 opacity-100"
-            }`}
-            style={{ maxWidth: "520px" }}
-          >
-            <div className="relative">
-              {imageError ? (
-                <div className="w-full aspect-[16/9] rounded-3xl shadow-2xl ring-4 ring-white/20 flex items-center justify-center bg-gray-800 text-gray-400 flex-col p-8">
-                  <ImageOff className="h-16 w-16 mb-4" />
-                  <span className="text-lg">Image failed to load</span>
-                </div>
-              ) : (
-                <img
-                  src="/rohith-photo.jpeg"
-                  alt="Rohith Sudhakar"
-                  className="w-full aspect-[16/9] object-cover rounded-3xl shadow-2xl ring-4 ring-white/20"
-                  onError={() => setImageError(true)}
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-3xl" />
+      {/* 3D MacBook Animation */}
+      <Canvas camera={{ position: [0, 0, 5], fov: 50 }} className="absolute inset-0 z-0">
+        <ambientLight intensity={0.5} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+        <pointLight position={[-10, -10, -10]} />
+        <OrbitControls enableZoom={false} enablePan={false} />
+        <Environment preset="warehouse" />
+        <MacBookAnimation imageUrl="/rohith-photo.jpeg" onAnimationComplete={handle3DAnimationComplete} />
+      </Canvas>
 
-              {/* Floating tech icons around image */}
-              <div className="absolute -top-4 -right-4 bg-blue-500 p-2 rounded-full animate-bounce">
-                <Code className="h-6 w-6 text-white" />
-              </div>
-              <div
-                className="absolute -bottom-4 -left-4 bg-green-500 p-2 rounded-full animate-bounce"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <Rocket className="h-6 w-6 text-white" />
-              </div>
-              <div
-                className="absolute top-1/2 -left-6 bg-purple-500 p-2 rounded-full animate-bounce"
-                style={{ animationDelay: "1s" }}
-              >
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </div>
+      {/* Content Container - overlaid using Html from drei */}
+      <Html fullscreen>
+        <div className="relative z-10 flex items-center justify-center h-full w-screen p-8 pointer-events-none">
+          <div className="text-center max-w-4xl">
+            {/* Name with modern typography */}
+            <h1
+              className={`text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight transition-all duration-2000 ${
+                fadeOut ? "transform translate-y-[-100px] opacity-0" : "transform translate-y-0 opacity-100"
+              }`}
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                textShadow: "0 0 30px rgba(102, 126, 234, 0.5)",
+                animation: "glow 2s ease-in-out infinite alternate",
+              }}
+            >
+              ROHITH SUDHAKAR
+            </h1>
 
-          {/* Name with modern typography */}
-          <h1
-            className={`text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight transition-all duration-2000 ${
-              fadeOut ? "transform translate-y-[-100px] opacity-0" : "transform translate-y-0 opacity-100"
-            }`}
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-              textShadow: "0 0 30px rgba(102, 126, 234, 0.5)",
-              animation: "glow 2s ease-in-out infinite alternate",
-            }}
-          >
-            ROHITH SUDHAKAR
-          </h1>
-
-          {/* Animated subtitle with ScrollVelocity */}
-          <div
-            className={`text-xl md:text-2xl text-white/90 font-light mb-8 transition-all duration-2000 delay-500 ${
-              fadeOut ? "transform translate-y-[50px] opacity-0" : "transform translate-y-0 opacity-100"
-            }`}
-            style={{ animation: "fadeInUp 2s ease-out 0.5s both" }}
-          >
-            <ScrollVelocity
-              texts={["Computer Science Student", "Full-Stack Developer"]}
-              velocity={20} // Adjust velocity as needed
-              className="scroll-velocity-text-item" // Custom class for individual text items
-            />
-          </div>
-
-          {/* Skills badges */}
-          <div
-            className={`flex flex-wrap justify-center gap-2 mb-8 transition-all duration-1000 delay-1000 ${
-              fadeOut ? "opacity-0" : "opacity-100"
-            }`}
-            style={{ animation: "fadeIn 1s ease-out 1.5s both" }}
-          >
-            {["React", "Python", "Node.js", "AI/ML", "ROS 2"].map((skill, index) => (
-              <Badge
-                key={skill}
-                className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-all duration-300 animate-pulse"
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                {skill}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Progress bar */}
-          <div
-            className={`w-full max-w-md mx-auto transition-all duration-1000 delay-1500 ${
-              fadeOut ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white/80 text-sm">Loading Portfolio</span>
-              <span className="text-white/80 text-sm">{progress}%</span>
-            </div>
-            <div className="w-full bg-white/20 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
+            {/* Animated subtitle with ScrollVelocity */}
+            <div
+              className={`text-xl md:text-2xl text-white/90 font-light mb-8 transition-all duration-2000 delay-500 ${
+                fadeOut ? "transform translate-y-[50px] opacity-0" : "transform translate-y-0 opacity-100"
+              }`}
+              style={{ animation: "fadeInUp 2s ease-out 0.5s both" }}
+            >
+              <ScrollVelocity
+                texts={["Computer Science Student", "Full-Stack Developer"]}
+                velocity={20} // Adjust velocity as needed
+                className="scroll-velocity-text-item" // Custom class for individual text items
               />
             </div>
-          </div>
 
-          {/* Loading dots */}
-          <div className={`mt-8 transition-all duration-1000 delay-2000 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
-            <div className="flex justify-center space-x-2">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-3 h-3 bg-white/60 rounded-full animate-bounce"
-                  style={{
-                    animationDelay: `${i * 0.3}s`,
-                    animationDuration: "1.5s",
-                  }}
-                />
+            {/* Skills badges */}
+            <div
+              className={`flex flex-wrap justify-center gap-2 mb-8 transition-all duration-1000 delay-1000 ${
+                fadeOut ? "opacity-0" : "opacity-100"
+              }`}
+              style={{ animation: "fadeIn 1s ease-out 1.5s both" }}
+            >
+              {["React", "Python", "Node.js", "AI/ML", "ROS 2"].map((skill, index) => (
+                <Badge
+                  key={skill}
+                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-all duration-300 animate-pulse"
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
+                  {skill}
+                </Badge>
               ))}
+            </div>
+
+            {/* Progress bar */}
+            <div
+              className={`w-full max-w-md mx-auto transition-all duration-1000 delay-1500 ${
+                fadeOut ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white/80 text-sm">Loading Portfolio</span>
+                <span className="text-white/80 text-sm">{progress}%</span>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Loading dots */}
+            <div className={`mt-8 transition-all duration-1000 delay-2000 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
+              <div className="flex justify-center space-x-2">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-3 h-3 bg-white/60 rounded-full animate-bounce"
+                    style={{
+                      animationDelay: `${i * 0.3}s`,
+                      animationDuration: "1.5s",
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Html>
 
       <style jsx>{`
         @keyframes fadeInUp {
@@ -299,161 +250,9 @@ function LoadingPage({ onComplete }: { onComplete: () => void }) {
           animation: fade-in 0.5s ease-out forwards;
         }
 
-        @keyframes photo-pulse {
-          0% {
-            box-shadow: 0 0 0px rgba(147, 51, 234, 0.4); /* purple-500 with opacity */
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(147, 51, 234, 0.8); /* more intense purple glow */
-          }
-          100% {
-            box-shadow: 0 0 0px rgba(147, 51, 234, 0.4);
-          }
-        }
-
-        .photo-pulse-animation {
-          animation: photo-pulse 2s ease-in-out infinite;
-        }
+        /* Removed photo-pulse-animation as the main photo is now in 3D model */
       `}</style>
     </div>
-  )
-}
-
-// Interactive skill bar component
-function InteractiveSkillBar({ skill, level, icon }: { skill: string; level: number; icon: any }) {
-  const [isHovered, setIsHovered] = useState(false)
-  const [animatedLevel, setAnimatedLevel] = useState(0)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedLevel(level)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [level])
-
-  const Icon = icon
-
-  return (
-    <div
-      className="space-y-2 group cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Icon
-            className={`h-4 w-4 transition-all duration-300 ${isHovered ? "text-purple-500 scale-125" : "text-gray-500"}`}
-          />
-          <span className={`text-sm font-medium transition-colors duration-300 ${isHovered ? "text-purple-500" : ""}`}>
-            {skill}
-          </span>
-        </div>
-        <span
-          className={`text-xs transition-all duration-300 ${isHovered ? "text-purple-500 font-bold" : "text-gray-500"}`}
-        >
-          {level}%
-        </span>
-      </div>
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-        <div
-          className={`h-2 rounded-full transition-all duration-1000 ease-out ${
-            isHovered
-              ? "bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600"
-              : "bg-gradient-to-r from-purple-500 to-pink-500"
-          }`}
-          style={{
-            width: `${animatedLevel}%`,
-            transform: isHovered ? "scaleY(1.2)" : "scaleY(1)",
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
-// Contact Form Component
-function ContactForm({ darkMode, contactRef }: { darkMode: boolean; contactRef: React.RefObject<HTMLDivElement> }) {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [message, setMessage] = useState("")
-  const [isSending, setIsSending] = useState(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name || !email || !message) {
-      toast.error("Please fill in all fields.", { duration: 1000 })
-      return
-    }
-
-    setIsSending(true)
-    // Simulate sending message
-    setTimeout(() => {
-      toast.success("Message sent successfully! I'll get back to you soon. 🚀", { duration: 1000 })
-      setName("")
-      setEmail("")
-      setMessage("")
-      setIsSending(false)
-    }, 2000)
-  }
-
-  return (
-    <Card
-      ref={contactRef}
-      className={`transition-all duration-300 hover:shadow-lg ${
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"
-      }`}
-    >
-      <CardContent className="p-4">
-        <h3 className={`font-semibold mb-3 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-          <Mail className="h-5 w-5 text-blue-500" />
-          Contact Me
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <Input
-              type="text"
-              placeholder="Your Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={darkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" : ""}
-            />
-          </div>
-          <div>
-            <Input
-              type="email"
-              placeholder="Your Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={darkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" : ""}
-            />
-          </div>
-          <div>
-            <Textarea
-              placeholder="Your Message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              className={darkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" : ""}
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-purple-500 hover:bg-purple-600 transition-all duration-200"
-            disabled={isSending}
-          >
-            {isSending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" /> Send Message
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
   )
 }
 
