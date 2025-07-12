@@ -61,6 +61,3 @@ export default function MacBookAnimation({ imageUrl, onAnimationComplete }: MacB
     </group>
   )
 }
-
-// Preload the GLB model
-useGLTF.preload("/assets/3d/macbook.glb")
