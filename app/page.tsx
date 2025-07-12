@@ -56,7 +56,11 @@ import ScrollVelocity from "@/components/scroll-velocity"
 import "@/components/scroll-velocity.css"
 import { Canvas } from "@react-three/fiber"
 import { Html, OrbitControls, Environment } from "@react-three/drei"
-import MacBookAnimation from "@/components/macbook-animation" // Import the new component
+import dynamic from "next/dynamic"
+const DynamicMacBookAnimation = dynamic(() => import("@/components/macbook-animation"), {
+  ssr: false,
+  loading: () => null, // Or a simple loading spinner if desired
+})
 import InteractiveSkillBar from "@/components/interactive-skill-bar" // Import InteractiveSkillBar
 import ContactForm from "@/components/contact-form" // Import ContactForm
 import FloatingParticles from "@/components/floating-particles" // Import FloatingParticles
@@ -116,7 +120,7 @@ function LoadingPage({ onComplete }: { onComplete: () => void }) {
         <pointLight position={[-10, -10, -10]} />
         <OrbitControls enableZoom={false} enablePan={false} />
         <Environment preset="warehouse" />
-        <MacBookAnimation imageUrl="/rohith-photo.jpeg" onAnimationComplete={handle3DAnimationComplete} />
+        <DynamicMacBookAnimation imageUrl="/rohith-photo.jpeg" onAnimationComplete={handle3DAnimationComplete} />
       </Canvas>
 
       {/* Content Container - overlaid using Html from drei */}
